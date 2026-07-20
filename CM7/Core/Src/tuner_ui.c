@@ -2,6 +2,7 @@
 
 #include "audio_capture.h"
 #include "pitch_detector.h"
+#include "xpt2046_touch.h"
 #include "lvgl.h"
 #include <math.h>
 
@@ -36,6 +37,52 @@ static uint8_t result_valid;
 static float measured_hz;
 static float measured_cents;
 static uint32_t last_refresh_ms;
+static uint32_t last_touch_action_ms;
+static uint8_t direct_touch_latched;
+
+static void ChangeString(int32_t step)
+{
+  uint32_t now = lv_tick_get();
+  int32_t string_number = (int32_t)d_tuning_targets[selected_target].string_number;
+  if ((now - last_touch_action_ms) < 250U) return;
+  last_touch_action_ms = now;
+  string_number += step;
+  if (string_number < 1) string_number = 21;
+  if (string_number > 21) string_number = 1;
+  TunerUI_SelectString((uint8_t)string_number);
+}
+
+static void PreviousStringEvent(lv_event_t *event)
+{
+  (void)event;
+  ChangeString(-1);
+}
+
+static void NextStringEvent(lv_event_t *event)
+{
+  (void)event;
+  ChangeString(1);
+}
+
+static lv_obj_t *CreateStringButton(lv_obj_t *screen, const char *text,
+                                    lv_coord_t x,
+                                    lv_event_cb_t callback)
+{
+  lv_obj_t *button = lv_btn_create(screen);
+  lv_obj_t *label = lv_label_create(button);
+  lv_obj_set_size(button, 50, 38);
+  lv_obj_set_pos(button, x, 53);
+  lv_obj_set_ext_click_area(button, 8);
+  lv_obj_set_style_radius(button, 5, 0);
+  lv_obj_set_style_bg_color(button, lv_color_hex(0x29495C), 0);
+  lv_obj_set_style_bg_color(button, lv_palette_main(LV_PALETTE_CYAN),
+                            LV_STATE_PRESSED);
+  /* Resistive touch release can bounce; act as soon as a stable press starts. */
+  lv_obj_add_event_cb(button, callback, LV_EVENT_PRESSED, NULL);
+  lv_label_set_text(label, text);
+  lv_obj_center(label);
+  return button;
+}
 
 static void SetColor(lv_obj_t *object, lv_color_t color)
 {
@@ -140,7 +187,10 @@ void TunerUI_Init(void)
   lv_obj_align(reference, LV_ALIGN_TOP_MID, 0, 34);
 
   CreateCaption(screen, "STRING", 64);
+  CreateStringButton(screen, "<", 96, PreviousStringEvent);
+  CreateStringButton(screen, ">", 184, NextStringEvent);
   string_value_label = CreateValue(screen, 64);
+  lv_obj_set_pos(string_value_label, 154, 62);
   CreateCaption(screen, "TARGET", 100);
   target_value_label = CreateValue(screen, 100);
   CreateCaption(screen, "MEASURE", 136);
@@ -174,6 +224,26 @@ void TunerUI_Task(void)
   uint32_t count;
   uint32_t now = lv_tick_get();
   char text[48];
+  uint16_t touch_x;
+  uint16_t touch_y;
+
+  /* Handle string selection directly.  This deliberately bypasses LVGL's
+     press/release state machine because resistive-panel release bounce can
+     prevent a CLICKED/PRESSED event on this hardware. */
+  if (XPT2046_Read(&touch_x, &touch_y) != 0U)
+  {
+    if ((direct_touch_latched == 0U) &&
+        (touch_y <= 150U))
+    {
+      if (touch_x < 165U) ChangeString(-1);
+      else ChangeString(1);
+      direct_touch_latched = 1U;
+    }
+  }
+  else
+  {
+    direct_touch_latched = 0U;
+  }
 
   /* Consume each DMA half promptly. Pitch processing will replace this release
      point; display updates remain limited to 5 Hz. */

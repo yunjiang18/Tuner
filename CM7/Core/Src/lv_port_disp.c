@@ -1,6 +1,7 @@
 #include "lv_port_disp.h"
 
 #include "lcd_ili9341.h"
+#include "xpt2046_touch.h"
 #include "lvgl.h"
 
 #define LVGL_BUF_LINES 20U
@@ -8,6 +9,25 @@
 static lv_disp_draw_buf_t draw_buf;
 static lv_color_t buf_1[LCD_WIDTH * LVGL_BUF_LINES];
 static lv_disp_drv_t disp_drv;
+static lv_indev_drv_t indev_drv;
+
+static void touch_read_cb(lv_indev_drv_t *drv, lv_indev_data_t *data)
+{
+  uint16_t x;
+  uint16_t y;
+  (void)drv;
+
+  if (XPT2046_Read(&x, &y) != 0U)
+  {
+    data->point.x = (lv_coord_t)x;
+    data->point.y = (lv_coord_t)y;
+    data->state = LV_INDEV_STATE_PR;
+  }
+  else
+  {
+    data->state = LV_INDEV_STATE_REL;
+  }
+}
 
 static void lcd_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_p)
 {
@@ -19,6 +39,15 @@ static void lcd_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *
   LCD_WritePixels((const uint16_t *)color_p, width * height);
 
   lv_disp_flush_ready(drv);
+}
+
+void lv_port_indev_init(void)
+{
+  XPT2046_Init();
+  lv_indev_drv_init(&indev_drv);
+  indev_drv.type = LV_INDEV_TYPE_POINTER;
+  indev_drv.read_cb = touch_read_cb;
+  lv_indev_drv_register(&indev_drv);
 }
 
 void lv_port_disp_init(void)

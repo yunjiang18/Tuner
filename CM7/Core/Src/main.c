@@ -163,6 +163,7 @@ Error_Handler();
   LCD_Init();
   lv_init();
   lv_port_disp_init();
+  lv_port_indev_init();
   TunerUI_Init();
   if ((AudioCapture_Init() != AUDIO_CAPTURE_OK) ||
       (AudioCapture_Start() != AUDIO_CAPTURE_OK))
@@ -313,7 +314,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /* Configure PA5/PA7 as SPI1 SCK/MOSI. */
-  GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_7;
+  GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;

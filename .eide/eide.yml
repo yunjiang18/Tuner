@@ -41,6 +41,7 @@ virtualFolder:
                     - path: CM7/Core/Src/tuner_ui.c
                     - path: CM7/Core/Src/audio_capture.c
                     - path: CM7/Core/Src/pitch_detector.c
+                    - path: CM7/Core/Src/xpt2046_touch.c
                   folders: []
     - name: Drivers
       files: []

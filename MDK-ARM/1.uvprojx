@@ -551,6 +551,11 @@
               <FileType>1</FileType>
               <FilePath>../CM7/Core/Src/tuner_ui.c</FilePath>
             </File>
+            <File>
+              <FileName>xpt2046_touch.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../CM7/Core/Src/xpt2046_touch.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1215,6 +1220,11 @@
               <FileName>tuner_ui.c</FileName>
               <FileType>1</FileType>
               <FilePath>../CM7/Core/Src/tuner_ui.c</FilePath>
+            </File>
+            <File>
+              <FileName>xpt2046_touch.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../CM7/Core/Src/xpt2046_touch.c</FilePath>
             </File>
           </Files>
         </Group>

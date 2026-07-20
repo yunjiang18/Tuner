@@ -32,7 +32,7 @@ static void LCD_SPI_Init(void)
 
   lcd_spi.Instance = SPI1;
   lcd_spi.Init.Mode = SPI_MODE_MASTER;
-  lcd_spi.Init.Direction = SPI_DIRECTION_2LINES_TXONLY;
+  lcd_spi.Init.Direction = SPI_DIRECTION_2LINES;
   lcd_spi.Init.DataSize = SPI_DATASIZE_8BIT;
   lcd_spi.Init.CLKPolarity = SPI_POLARITY_LOW;
   lcd_spi.Init.CLKPhase = SPI_PHASE_1EDGE;
@@ -58,6 +58,24 @@ static void LCD_SPI_Init(void)
   {
     Error_Handler();
   }
+}
+
+HAL_StatusTypeDef LCD_SPI_TransmitReceive(const uint8_t *tx, uint8_t *rx,
+                                          uint16_t length)
+{
+  return HAL_SPI_TransmitReceive(&lcd_spi, (uint8_t *)tx, rx, length,
+                                 HAL_MAX_DELAY);
+}
+
+void LCD_SPI_SetTouchSpeed(uint8_t touch_mode)
+{
+  /* XPT2046 is specified for a much slower clock than the display.  Change
+     only the master baud-rate field while SPI1 is idle.  /32 gives 0.78 MHz
+     from HSE and 2 MHz from the HSI fallback. */
+  __HAL_SPI_DISABLE(&lcd_spi);
+  MODIFY_REG(lcd_spi.Instance->CFG1, SPI_CFG1_MBR,
+             touch_mode ? SPI_BAUDRATEPRESCALER_32 : SPI_BAUDRATEPRESCALER_8);
+  __HAL_SPI_ENABLE(&lcd_spi);
 }
 
 static void LCD_PinHigh(GPIO_TypeDef *port, uint16_t pin)

@@ -44,6 +44,7 @@ $ProjectSources = @(
   "CM7\Core\Src\stm32h7xx_it.c",
   "CM7\Core\Src\lcd_ili9341.c",
   "CM7\Core\Src\lv_port_disp.c",
+  "CM7\Core\Src\xpt2046_touch.c",
   "CM7\Core\Src\tuner_ui.c",
   "CM7\Core\Src\audio_capture.c",
   "CM7\Core\Src\pitch_detector.c",

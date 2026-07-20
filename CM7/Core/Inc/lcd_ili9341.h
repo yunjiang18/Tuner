@@ -16,6 +16,9 @@ void LCD_WritePixels(const uint16_t *pixels, uint32_t count);
 void LCD_FillScreen(uint16_t color);
 void LCD_FillRect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color);
 void LCD_BacklightOn(void);
+HAL_StatusTypeDef LCD_SPI_TransmitReceive(const uint8_t *tx, uint8_t *rx,
+                                          uint16_t length);
+void LCD_SPI_SetTouchSpeed(uint8_t touch_mode);
 
 #ifdef __cplusplus
 }
