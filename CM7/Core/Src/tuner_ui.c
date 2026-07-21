@@ -39,6 +39,9 @@ static float measured_cents;
 static uint32_t last_refresh_ms;
 static uint32_t last_touch_action_ms;
 static uint8_t direct_touch_latched;
+static uint32_t last_valid_result_ms;
+
+#define PITCH_RESULT_HOLD_MS 1200U
 
 static void ChangeString(int32_t step)
 {
@@ -302,14 +305,34 @@ void TunerUI_SelectString(uint8_t string_number)
   if ((string_number < 1U) || (string_number > 21U)) return;
   selected_target = (uint8_t)(21U - string_number);
   result_valid = 0U;
+  last_valid_result_ms = 0U;
   UpdateTargetText();
 }
 
 void TunerUI_SetPitchResult(float frequency_hz, float cents, float result_confidence,
                             uint8_t valid)
 {
+  uint32_t now = lv_tick_get();
+
+  if (valid != 0U)
+  {
+    measured_hz = frequency_hz;
+    measured_cents = cents;
+    result_valid = 1U;
+    last_valid_result_ms = now;
+    (void)result_confidence;
+    return;
+  }
+
+  if ((result_valid != 0U) &&
+      ((now - last_valid_result_ms) < PITCH_RESULT_HOLD_MS))
+  {
+    (void)result_confidence;
+    return;
+  }
+
   measured_hz = frequency_hz;
   measured_cents = cents;
   (void)result_confidence;
-  result_valid = valid;
+  result_valid = 0U;
 }
